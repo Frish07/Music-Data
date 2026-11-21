@@ -1,6 +1,6 @@
 use crate::metadata::{self, Fields, Track};
 use id3::frame::Picture;
-use std::{cell::RefCell, ffi::c_void, mem::{size_of, zeroed}, os::windows::ffi::{OsStrExt, OsStringExt}, path::{Path, PathBuf}, ptr::{null, null_mut}};
+use std::{cell::RefCell, ffi::c_void, mem::{size_of, zeroed}, os::windows::ffi::OsStringExt, path::PathBuf, ptr::{null, null_mut}};
 use windows_sys::Win32::{
     Foundation::*, Graphics::{Gdi::*, Dwm::DwmSetWindowAttribute}, System::LibraryLoader::GetModuleHandleW,
     UI::{Controls::{Dialogs::*, *}, HiDpi::*, Input::KeyboardAndMouse::EnableWindow, Shell::*, WindowsAndMessaging::*},

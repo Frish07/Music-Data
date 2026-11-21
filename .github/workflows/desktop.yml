@@ -33,8 +33,7 @@ jobs:
             desktop/target
           key: windows-x64-rust-${{ hashFiles('desktop/Cargo.toml', 'desktop/Cargo.lock', 'desktop/.cargo/config.toml') }}
       - name: Resolve dependencies
-        run: |
-          if (!(Test-Path Cargo.lock)) { cargo generate-lockfile }
+        run: cargo fetch --locked --target x86_64-pc-windows-msvc
       - name: Check compilation
         run: cargo check --locked --target x86_64-pc-windows-msvc
       - name: Test metadata and file safety

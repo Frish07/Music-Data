@@ -1,5 +1,5 @@
 use id3::{frame::{Comment, Picture, PictureType}, Tag, TagLike, Version};
-use std::{fs, io::Read, path::{Path, PathBuf}};
+use std::{fs, io::{Read, Seek}, path::{Path, PathBuf}};
 
 pub const MAX_AUDIO: u64 = 150 * 1024 * 1024;
 pub const MAX_COVER: u64 = 3 * 1024 * 1024;
@@ -116,6 +116,7 @@ pub fn save_copy(track: &Track, fields: &Fields, cover: &Option<Picture>, destin
     let result = (|| -> Result<(), String> {
         let mut input = fs::File::open(&source).map_err(|e| e.to_string())?;
         std::io::copy(&mut input, &mut output).map_err(|e| e.to_string())?;
+        output.rewind().map_err(|e| e.to_string())?;
         tag.write_to_file(&mut output, Version::Id3v24).map_err(|e| e.to_string())?;
         output.sync_all().map_err(|e| e.to_string())?;
         Ok(())
@@ -147,7 +148,7 @@ mod tests {
         let mut a = std::io::Cursor::new(original.as_slice()); Tag::skip(&mut a).unwrap();
         let result = fs::read(&destination).unwrap();
         let mut b = std::io::Cursor::new(result.as_slice()); Tag::skip(&mut b).unwrap();
-        assert_eq!(&original[a.position() as usize..], &result[b.position() as usize..]);
+        assert!(&original[a.position() as usize..] == &result[b.position() as usize..], "MP3 audio bytes changed or duplicate ID3 headers were inserted");
         assert!(save_copy(&track, &fields, &None, &source).is_err());
         assert!(save_copy(&track, &fields, &None, &destination).is_err());
         fs::remove_dir_all(dir).unwrap();
