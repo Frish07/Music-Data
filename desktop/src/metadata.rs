@@ -99,8 +99,8 @@ pub fn updated_tag(track: &Track, fields: &Fields, cover: &Option<Picture>) -> R
     if !fields.album.is_empty() { tag.set_album(&fields.album); }
     if !fields.genre.is_empty() { tag.set_genre(&fields.genre); }
     if !fields.year.is_empty() { tag.set_year(fields.year.parse().map_err(|_| "Некорректный год.".to_string())?); }
-    if !fields.comment.is_empty() { tag.add_comment(Comment { lang: "rus".into(), description: String::new(), text: fields.comment.clone() }); }
-    if let Some(picture) = cover { tag.add_picture(picture.clone()); }
+    if !fields.comment.is_empty() { tag.add_frame(Comment { lang: "rus".into(), description: String::new(), text: fields.comment.clone() }); }
+    if let Some(picture) = cover { tag.add_frame(picture.clone()); }
     Ok(tag)
 }
 

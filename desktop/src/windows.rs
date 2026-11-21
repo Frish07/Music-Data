@@ -2,8 +2,8 @@ use crate::metadata::{self, Fields, Track};
 use id3::frame::Picture;
 use std::{cell::RefCell, ffi::c_void, mem::{size_of, zeroed}, os::windows::ffi::{OsStrExt, OsStringExt}, path::{Path, PathBuf}, ptr::{null, null_mut}};
 use windows_sys::Win32::{
-    Foundation::*, Graphics::Gdi::*, System::LibraryLoader::GetModuleHandleW,
-    UI::{Controls::{Dialogs::*, EM_SETCUEBANNER}, HiDpi::*, Shell::*, WindowsAndMessaging::*},
+    Foundation::*, Graphics::{Gdi::*, Dwm::DwmSetWindowAttribute}, System::LibraryLoader::GetModuleHandleW,
+    UI::{Controls::{Dialogs::*, *}, HiDpi::*, Input::KeyboardAndMouse::EnableWindow, Shell::*, WindowsAndMessaging::*},
 };
 
 const OPEN: usize = 101;
@@ -20,7 +20,6 @@ const MUTED: u32 = rgb(155, 169, 158);
 const ACCENT: u32 = rgb(183, 205, 161);
 const fn rgb(r: u8, g: u8, b: u8) -> u32 { r as u32 | ((g as u32) << 8) | ((b as u32) << 16) }
 fn wide(text: &str) -> Vec<u16> { text.encode_utf16().chain(Some(0)).collect() }
-fn path_wide(path: &Path) -> Vec<u16> { path.as_os_str().encode_wide().chain(Some(0)).collect() }
 
 struct Art { pixels: Vec<u8>, width: i32, height: i32 }
 struct App {
@@ -209,6 +208,20 @@ unsafe extern "system" fn window_proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPAR
         WM_PAINT => { paint(hwnd); 0 }
         WM_ERASEBKGND => 1,
         WM_SIZE => { layout(hwnd); 0 }
+        WM_DRAWITEM => {
+            let item = &*(lp as *const DRAWITEMSTRUCT);
+            let disabled = item.itemState & ODS_DISABLED != 0;
+            let pressed = item.itemState & ODS_SELECTED != 0;
+            let primary = item.CtlID as usize == SAVE;
+            let color = if disabled { rgb(38, 43, 39) } else if primary { if pressed { rgb(29, 78, 180) } else { rgb(36, 103, 237) } } else if pressed { rgb(60, 68, 61) } else { rgb(49, 57, 50) };
+            let brush = CreateSolidBrush(color); FillRect(item.hDC, &item.rcItem, brush); DeleteObject(brush);
+            SetBkMode(item.hDC, TRANSPARENT as i32); SetTextColor(item.hDC, if disabled { MUTED } else { WHITE });
+            let font = APP.with(|a| a.borrow().as_ref().unwrap().font); SelectObject(item.hDC, font);
+            let caption = wide(&text(item.hwndItem)); let mut rect = item.rcItem;
+            DrawTextW(item.hDC, caption.as_ptr(), -1, &mut rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            if item.itemState & ODS_FOCUS != 0 { let mut focus = item.rcItem; focus.left += 3; focus.top += 3; focus.right -= 3; focus.bottom -= 3; DrawFocusRect(item.hDC, &focus); }
+            1
+        }
         WM_GETMINMAXINFO => { let info = &mut *(lp as *mut MINMAXINFO); let s = APP.with(|a| a.borrow().as_ref().unwrap().scale); info.ptMinTrackSize = POINT { x: (940.0*s) as i32, y: (740.0*s) as i32 }; 0 }
         WM_COMMAND => {
             let id = wp & 0xffff; let notification = (wp >> 16) & 0xffff;
@@ -247,6 +260,8 @@ pub fn run() { unsafe {
     RegisterClassW(&wc);
     let hwnd = CreateWindowExW(WS_EX_ACCEPTFILES, class.as_ptr(), wide("Music Data — редактор метаданных").as_ptr(), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1120, 820, null_mut(), null_mut(), instance, null());
     if hwnd.is_null() { std::process::exit(1); }
+    let dark: i32 = 1;
+    DwmSetWindowAttribute(hwnd, 20, (&dark as *const i32).cast(), size_of::<i32>() as u32);
     let scale = GetDpiForWindow(hwnd) as f32/96.0;
     let font = |size: f32| CreateFontW(-(size*scale) as i32, 0, 0, 0, 400, 0, 0, 0, DEFAULT_CHARSET as u32, OUT_DEFAULT_PRECIS as u32, CLIP_DEFAULT_PRECIS as u32, CLEARTYPE_QUALITY as u32, DEFAULT_PITCH as u32, wide("Segoe UI").as_ptr());
     let normal = font(16.0); let title = font(27.0); let small = font(14.0);
@@ -257,9 +272,10 @@ pub fn run() { unsafe {
         SendMessageW(h, EM_SETCUEBANNER, 0, wide(["Название композиции", "Имя исполнителя или группы", "Название альбома", "Год", "Жанр", "Короткий комментарий…"][i]).as_ptr() as isize);
         EnableWindow(h, 0); h
     });
-    let buttons = ["Открыть MP3…", "Выбрать изображение…", "Удалить обложку", "Сбросить изменения", "Предпросмотр", "Сохранить MP3…"].map(|name| make_control(hwnd, "BUTTON", name, BS_PUSHBUTTON as u32, 0, normal));
+    let buttons = ["Открыть MP3…", "Выбрать изображение…", "Удалить обложку", "Сбросить изменения", "Предпросмотр", "Сохранить MP3…"].map(|name| make_control(hwnd, "BUTTON", name, BS_OWNERDRAW as u32, 0, normal));
     for (i, button) in buttons.iter().enumerate() { SetWindowLongPtrW(*button, GWLP_ID, (OPEN+i) as isize); if i != 0 { EnableWindow(*button, 0); } }
-    let status = make_control(hwnd, "STATIC", "Выберите MP3, чтобы изменить его метаданные.", SS_LEFT as u32, 300, small);
+    // SS_LEFT is the zero-valued default style for a STATIC control.
+    let status = make_control(hwnd, "STATIC", "Выберите MP3, чтобы изменить его метаданные.", 0, 300, small);
     APP.with(|a| *a.borrow_mut() = Some(App { track: None, cover: None, art: None, edits, buttons, status, brush: CreateSolidBrush(INPUT), font: normal, title_font: title, small_font: small, error: false, dirty: false, scale }));
     let mut work: RECT = zeroed(); SystemParametersInfoW(SPI_GETWORKAREA, 0, (&mut work as *mut RECT).cast(), 0);
     let width = (1120.0*scale) as i32; let height = (820.0*scale) as i32;
