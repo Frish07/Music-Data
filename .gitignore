@@ -3,7 +3,7 @@ node_modules/
 *.log
 .DS_Store
 .local/
-desktop/target/
-desktop/portable/
-desktop/*.zip
+target/
+portable/
+*.zip
 __pycache__/

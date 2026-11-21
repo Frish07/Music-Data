@@ -2,7 +2,7 @@ name: Verify repository languages
 
 on:
   push:
-    branches: [main]
+    branches: [desktop]
     paths:
       - '**/*.rs'
       - '.gitattributes'
@@ -38,7 +38,7 @@ jobs:
           data = json.loads(Path(os.environ['REPORT']).read_text())
           rust = data.get('Rust', {})
           assert rust.get('size', 0) > 0, 'Rust is missing from Linguist statistics'
-          expected = {'desktop/src/main.rs', 'desktop/src/metadata.rs', 'desktop/src/windows.rs'}
+          expected = {'src/main.rs', 'src/metadata.rs', 'src/windows.rs'}
           assert expected.issubset(set(rust.get('files', []))), 'Some Rust sources were excluded'
           lines = ['## Repository language analysis', '', 'Official GitHub Linguist analysis of this commit. The GitHub sidebar is refreshed separately by GitHub.', '', '| Language | Bytes | Share |', '| --- | ---: | ---: |']
           for language, info in sorted(data.items(), key=lambda item: -item[1]['size']):
