@@ -1,5 +1,7 @@
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
+//! Entry point for the native, offline Music Data desktop application.
+
 mod metadata;
 #[cfg(windows)]
 mod windows;

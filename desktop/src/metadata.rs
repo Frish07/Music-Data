@@ -1,3 +1,5 @@
+//! MP3 metadata operations shared by the Windows interface and file-safety tests.
+
 use id3::{frame::{Comment, Picture, PictureType}, Tag, TagLike, Version};
 use std::{fs, io::{Read, Seek}, path::{Path, PathBuf}};
 

@@ -1,68 +1,122 @@
 # Music Data
 
-Бесплатный редактор метаданных MP3 на русском языке. Тёмный адаптивный интерфейс по предоставленному референсу, без регистрации, серверов и внешних зависимостей.
+**English** | [Русский](README.ru.md)
 
-## Desktop для Windows 11 x64
+An MP3 metadata editor with a browser version and a native **Rust desktop app for Windows 11 x64**. Edit titles, artists, albums, years, genres, comments, and cover art. Both interfaces are currently in Russian.
 
-В `desktop/` находится нативное приложение на Rust. Оно работает офлайн, использует стандартные окна Windows и распространяется одним portable `MusicData.exe`. Не требует установки, Rust, Cargo, WebView2, внешних кодеков или пакета Visual C++ Redistributable: C runtime статически включается в сборку. Остальные DLL входят в Windows 11. Графический интерфейс не требует OpenGL/Vulkan.
+**[Open the web editor](https://frish07.github.io/Music-Data/)** · **[Download MusicData.exe](https://github.com/Frish07/Music-Data/releases/latest/download/MusicData.exe)** · **[Releases](https://github.com/Frish07/Music-Data/releases)**
 
-Скачивание без инструментов разработки:
+## Windows desktop app
 
-1. Откройте [Actions → Windows portable desktop](https://github.com/Frish07/Music-Data/actions/workflows/desktop.yml).
-2. Выберите успешный запуск и скачайте artifact **MusicData-Windows-x64-portable**.
-3. Распакуйте архив и запустите `MusicData.exe`. Для скачивания Artifacts нужен вход в GitHub.
+Download `MusicData.exe` from Releases and run it. The app is portable: no installer, administrator privileges, internet connection, Rust, Cargo, WebView2, external codecs, or Visual C++ Redistributable package is required.
 
-При создании тега версии workflow автоматически публикует `.exe`, portable ZIP и SHA-256 в [GitHub Releases](https://github.com/Frish07/Music-Data/releases). Например, создайте тег `v1.0.0` в интерфейсе GitHub. Создавать локально тег или устанавливать Git/Rust не требуется. Вкладка Releases позволяет скачать опубликованный `.exe` напрямую.
+The application uses native Windows controls. Its C runtime is linked statically, and all imported DLLs are included with Windows 11. It does not require OpenGL or Vulkan. You can keep just the `.exe`; the portable ZIP also includes instructions and a SHA-256 checksum.
 
-Каждый push (любая ветка и тег), pull request и ручной запуск выполняют `cargo check`, тесты чтения/записи тегов, оптимизированную Release-сборку x64, проверку зависимостей PE и пробный запуск готового `.exe`. Rust устанавливается только на временный runner GitHub. Для Release включены `opt-level = 3`, LTO, один codegen unit, удаление отладочных символов и статический CRT. Pull request не создаёт Release.
+### Features
 
-Desktop поддерживает MP3 до 150 МБ, название, исполнителя, альбом, четырёхзначный год, жанр, комментарий, обложки JPG/PNG до 3 МБ и 8192 × 8192 пикселей. Есть предпросмотр тегов, перетаскивание MP3, предупреждение о несохранённых изменениях и сохранение новой копии без перекодирования аудио. Существующие файлы и исходный MP3 не перезаписываются. Предпросмотр показывает метаданные, проигрыватель в desktop-версию не входит.
+- Open or drag in one MP3 file, up to 150 MB.
+- Read and edit the title, artist, album, four-digit year, genre, and comment.
+- Add, replace, or remove JPG/PNG cover art, up to 3 MB and 8192 × 8192 pixels.
+- Preview metadata and reset edits to the original file's tags.
+- Save a separate copy without re-encoding audio.
+- Protect the original MP3 and existing files from being overwritten.
+- Warn about unsaved changes before opening another file or closing.
+- Work entirely offline, with no file uploads or account required.
 
-Целевая платформа — **Windows 11 x64**. Один Windows `.exe` не работает нативно на всех ОС и архитектурах. Для телефонов, macOS и Linux остаётся веб-версия. ARM64-версия отдельно не собирается. Приложение не подписано сертификатом издателя; это может вызывать предупреждение Windows об неизвестном издателе.
+Desktop preview displays metadata; it does not include an audio player. The target platform is **Windows 11 x64**. This executable is not a native app for macOS, Linux, Android, or iOS. An ARM64 build is not provided or tested. The executable is not code-signed, so Windows may show an unknown-publisher warning.
 
-Для разработчиков: исходники в `desktop/src/`, конфигурация сборки в `desktop/.cargo/config.toml`, workflow — `.github/workflows/desktop.yml`. При установленном Rust/MSVC сборка выполняется из `desktop/` командой `cargo build --release --target x86_64-pc-windows-msvc`; пользователю программы это не нужно.
+### Download from Actions
 
-## Возможности
+1. Open [Actions → Windows portable desktop](https://github.com/Frish07/Music-Data/actions/workflows/desktop.yml).
+2. Select a successful run.
+3. Download the **MusicData-Windows-x64-portable** artifact.
+4. Extract it and launch `MusicData.exe`.
 
-- Выбор или перетаскивание MP3 до 150 МБ.
-- Чтение и запись названия, исполнителя, альбома, года, жанра и комментария.
-- Чтение и замена обложки JPG/PNG до 3 МБ, удаление обложки.
-- Предпросмотр тегов и прослушивание трека.
-- Скачивание отдельной копии `имя — edited.mp3`. Исходный файл не изменяется.
-- Аудиоданные копируются без перекодирования. Неизменяемые сторонние ID3v2-кадры сохраняются.
-- Обработка в браузере: аудио и обложки не отправляются на сервер. Нет аналитики, внешних шрифтов или CDN.
+GitHub sign-in is required to download Actions artifacts. Artifacts are retained for 90 days. Published builds are also available directly in [Releases](https://github.com/Frish07/Music-Data/releases).
 
-Поддерживаются обычные ID3v2.3 и ID3v2.4, MP3 без тегов и чтение ID3v1. При сохранении старый ID3v1 заменяется единым ID3v2-тегом. ID3v2.2, сжатые, зашифрованные, сгруппированные и unsynchronised теги отклоняются с сообщением. Другие аудиоформаты пока не поддерживаются. Поле года хранит четыре цифры; полная дата TDRC заменяется годом. Новая обложка заменяет все APIC-кадры; комментарий — все COMM-кадры.
+### Automated builds and releases
 
-## Локальный запуск
+Every push to any branch or tag, pull request, and manual run performs:
 
-Нужен Node.js 22 или новее. Установка пакетов не требуется.
+1. `cargo check` for `x86_64-pc-windows-msvc`.
+2. Metadata tests covering Unicode, cover art, unrelated tags, unchanged audio, invalid input, and overwrite protection.
+3. An optimized Release build with `opt-level = 3`, LTO, one codegen unit, stripped symbols, and a static C runtime.
+4. PE import-table inspection to verify x64, the GUI subsystem, and Windows system DLLs only.
+5. A smoke test that starts and closes the actual `.exe`.
+6. Upload of the portable executable and instructions to Actions Artifacts.
+
+Pushing a new version tag, such as `v1.1.0`, additionally publishes the verified `.exe`, portable ZIP, and SHA-256 checksum to GitHub Releases. Tags can be created through the GitHub website. Pull requests do not publish releases.
+
+Rust is installed **only on the temporary GitHub runner**, never on the end user's computer. Dependencies are pinned in `desktop/Cargo.lock` and builds use `--locked`. See [the desktop workflow](.github/workflows/desktop.yml).
+
+## Web editor
+
+**[Use Music Data on GitHub Pages](https://frish07.github.io/Music-Data/)**
+
+The responsive web app processes files in your browser. Audio and cover art are not uploaded to a server. There are no accounts, analytics, CDN dependencies, or external fonts.
+
+- Select or drop an MP3 up to 150 MB.
+- Edit the same six metadata fields and JPG/PNG cover art up to 3 MB.
+- Preview the updated tags and listen to the track.
+- Download a separate `name — edited.mp3` copy; the original stays unchanged.
+- Preserve audio bytes without re-encoding and retain unedited ID3v2 frames.
+
+The web editor supports ordinary ID3v2.3 and ID3v2.4 tags, untagged MP3 files, and reading ID3v1. On saving, the legacy ID3v1 tag is replaced with a single ID3v2 tag. ID3v2.2, compressed, encrypted, grouped, and unsynchronised tags are rejected with an explanation. Other audio formats are not supported.
+
+The year field stores four digits; a full TDRC date is replaced with the year. Replacing the cover replaces all APIC frames, and editing the comment replaces all COMM frames. The desktop app also replaces the cover and comment frames when saving.
+
+### Run the web editor locally
+
+For developers: Node.js 22 or newer is required. No package installation is needed.
 
 ```sh
 node scripts/serve.mjs
 ```
 
-Откройте http://127.0.0.1:4173. Для редактирования загрузите свой MP3, измените поля и нажмите «Сохранить MP3».
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173), load an MP3, edit its fields, and save a copy.
 
 ```sh
 node --test
 node scripts/build.mjs
 ```
 
-Статический результат создаётся в `dist/`. Все пути относительные: сайт работает в подпапке `/Music-Data/` на GitHub Pages.
+Static output is written to `dist/`. All asset paths are relative, so the website works under the `/Music-Data/` GitHub Pages path.
 
-## GitHub Actions и публикация
+### GitHub Pages deployment
 
-Workflow `.github/workflows/pages.yml` проверяет чтение/запись метаданных и собирает сайт для pull request. Push в `main` и ручной запуск дополнительно публикуют сайт на GitHub Pages. Сторонние секреты и npm-зависимости не нужны.
+The [Pages workflow](.github/workflows/pages.yml) tests and builds the web app for pull requests. A push to `main` or a manual run also deploys it to GitHub Pages. No third-party secrets or npm dependencies are required.
 
-В репозитории откройте **Settings → Pages → Build and deployment → Source → GitHub Actions**. После успешного workflow адрес будет https://frish07.github.io/Music-Data/.
+The publishing source is **Settings → Pages → Build and deployment → Source → GitHub Actions**. Workflow permissions are `contents: read`, plus `pages: write` and `id-token: write` for deployment. Pull requests are not deployed.
 
-Права workflow: `contents: read`, а у deploy — `pages: write` и `id-token: write`. Pull request не публикуется.
+## Source code
 
-## Структура
+| Path | Purpose |
+| --- | --- |
+| `desktop/src/main.rs` | Rust application entry point |
+| `desktop/src/windows.rs` | Native Windows interface and file dialogs |
+| `desktop/src/metadata.rs` | MP3 tag operations and Rust tests |
+| `desktop/.cargo/config.toml` | Static CRT configuration for Windows x64 |
+| `desktop/scripts/check_portable.py` | Executable architecture and DLL checks |
+| `index.html`, `styles.css` | Web interface |
+| `src/app.js` | Browser file handling, forms, preview, and downloads |
+| `src/id3.js` | Browser ID3 reader and writer |
+| `tests/id3.test.js` | Web metadata and audio-preservation tests |
+| `scripts/` | Web build and local preview scripts |
+| `.github/workflows/` | Desktop builds, releases, Pages, and language verification |
 
-- `index.html`, `styles.css` — интерфейс.
-- `src/app.js` — файлы, формы, предпросмотр и скачивание.
-- `src/id3.js` — чтение и запись тегов.
-- `tests/id3.test.js` — проверки кириллицы, обложек, повреждённых тегов и сохранности аудиоданных.
-- `scripts/` — сборка и локальный сервер.
+### Build the desktop app from source
+
+This is optional and intended for developers. End users should download the ready-made `.exe` instead. With Rust and the MSVC build tools already installed:
+
+```sh
+cd desktop
+cargo check --locked --target x86_64-pc-windows-msvc
+cargo test --locked --target x86_64-pc-windows-msvc
+cargo build --locked --release --target x86_64-pc-windows-msvc
+```
+
+The executable is written to `desktop/target/x86_64-pc-windows-msvc/release/MusicData.exe`.
+
+### Repository language detection
+
+The Rust sources are tracked in `desktop/src/`. `.gitattributes` explicitly includes `.rs` files in GitHub Linguist statistics as maintained Rust code. The [language-verification workflow](.github/workflows/languages.yml) runs the official GitHub Linguist container, checks that all three Rust source files are counted, and publishes a detailed report in its job summary and artifact. GitHub refreshes its Languages sidebar separately; this workflow does not directly control the sidebar cache.

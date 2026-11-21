@@ -1,3 +1,5 @@
+//! Native Win32 interface; uses only libraries included with Windows 11.
+
 use crate::metadata::{self, Fields, Track};
 use id3::frame::Picture;
 use std::{cell::RefCell, ffi::c_void, mem::{size_of, zeroed}, os::windows::ffi::OsStringExt, path::PathBuf, ptr::{null, null_mut}};
