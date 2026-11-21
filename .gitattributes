@@ -1,2 +1,0 @@
-# These are maintained application sources, not generated or vendored files.
-*.rs linguist-language=Rust linguist-detectable=true linguist-generated=false linguist-vendored=false linguist-documentation=false
